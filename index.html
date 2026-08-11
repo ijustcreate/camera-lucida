@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Lucida" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311110f'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23c9b59d' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23c9b59d'/%3E%3C/svg%3E" />
-    <link rel="manifest" href="./manifest.webmanifest?v=7" />
+    <link rel="manifest" href="./manifest.webmanifest?v=8" />
     <title>Lucida — Trace on paper</title>
-    <link rel="stylesheet" href="./styles.css?v=7" />
+    <link rel="stylesheet" href="./styles.css?v=8" />
   </head>
   <body>
     <main class="app-shell" id="appShell">
@@ -46,18 +46,30 @@
             <span class="mark mark--small" aria-hidden="true"></span>
             <span>Live camera</span>
           </div>
-          <button class="icon-button" id="fullScreenButton" type="button" aria-label="Toggle full screen" title="Toggle full screen">
-            <span aria-hidden="true">⛶</span>
-          </button>
+          <div class="studio-header__tools">
+            <button class="node-button" id="nodesButton" type="button" aria-pressed="false" aria-label="Show tracking nodes">
+              <span class="node-button__glyph" aria-hidden="true">•••</span>
+              <span>Nodes</span>
+            </button>
+            <button class="icon-button" id="fullScreenButton" type="button" aria-label="Toggle full screen" title="Toggle full screen">
+              <span aria-hidden="true">⛶</span>
+            </button>
+          </div>
         </header>
 
         <div class="drawing-stage" id="drawingStage">
           <video class="camera-feed" id="cameraFeed" autoplay muted playsinline></video>
           <div class="reference-wrap" id="referenceWrap">
             <img class="reference-image" id="referenceImage" alt="Your tracing overlay" hidden />
+            <div class="paper-plane" id="paperPlane" hidden aria-hidden="true">
+              <img class="paper-plane__image" id="planeImage" alt="" hidden />
+            </div>
+            <div class="plane-markers" id="planeMarkers" aria-hidden="true"></div>
+            <div class="mapping-guide" id="mappingGuide" aria-live="polite" hidden></div>
             <div class="gesture-layer" id="gestureLayer"></div>
           </div>
           <button class="empty-overlay-note" id="emptyOverlayNote" type="button">Add a photo to place it over the live camera.</button>
+          <canvas class="tracking-overlay" id="trackingOverlay" aria-hidden="true"></canvas>
         </div>
 
         <section class="control-dock" aria-label="Overlay controls">
@@ -71,15 +83,15 @@
               <button class="control-button" id="lockButton" type="button" aria-pressed="false">Lock image</button>
               <button class="control-button control-button--quiet" id="resetButton" type="button">Reset position</button>
             </div>
-            <div class="anchor-control" aria-label="Smart paper anchor">
+            <div class="anchor-control" aria-label="Paper plane controls">
               <div class="anchor-control__heading">
-                <span>Smart paper anchor</span>
-                <output id="anchorStatus" aria-live="polite">No surface saved</output>
+                <span>Paper plane</span>
+                <output id="anchorStatus" aria-live="polite">Not mapped</output>
               </div>
-              <p id="anchorHint">Align the overlay to your paper, then save the surface. Lucida will use camera details to steady it.</p>
+              <p id="anchorHint">Map the four corners of your paper. Then move the image directly across its surface.</p>
               <div class="anchor-control__actions">
-                <button class="control-button control-button--anchor" id="anchorButton" type="button">Set paper anchor</button>
-                <button class="control-button control-button--quiet" id="clearAnchorButton" type="button" disabled>Clear</button>
+                <button class="control-button control-button--anchor" id="anchorButton" type="button">Map paper plane</button>
+                <button class="control-button control-button--quiet" id="clearAnchorButton" type="button" disabled>Reset</button>
               </div>
             </div>
           </div>
@@ -103,6 +115,7 @@
       <p class="source-sheet__hint">Drag the overlay with one finger. Pinch with two fingers to resize it.</p>
     </dialog>
 
-    <script src="./app.js?v=7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsfeat@0.0.8/build/jsfeat-min.js"></script>
+    <script src="./app.js?v=8"></script>
   </body>
 </html>

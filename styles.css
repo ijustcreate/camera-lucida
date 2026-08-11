@@ -47,16 +47,28 @@ h1 { margin: 0; font-family: Iowan Old Style, Baskerville, Georgia, serif; font-
 .studio { position: relative; width: 100%; min-height: 100svh; overflow: hidden; background: #080808; isolation: isolate; }
 .studio-header { position: absolute; z-index: 8; top: max(12px, env(safe-area-inset-top)); right: 16px; left: 16px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
 .studio-header > * { pointer-events: auto; }
+.studio-header__tools { display: flex; align-items: center; gap: 8px; }
 .studio-title { padding: 8px 11px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; background: rgba(15,15,13,.56); backdrop-filter: blur(12px); font-size: .63rem; }
 .icon-button { display: grid; width: 43px; height: 43px; padding: 0; place-items: center; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; background: rgba(20,20,18,.76); color: var(--ink); cursor: pointer; backdrop-filter: blur(10px); }
 .icon-button span { font-size: 1.42rem; font-weight: 300; line-height: 1; }
+.node-button { display: inline-flex; min-height: 40px; align-items: center; gap: 6px; padding: 0 11px; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; background: rgba(20,20,18,.76); color: var(--ink); cursor: pointer; font-size: .72rem; backdrop-filter: blur(10px); }
+.node-button__glyph { color: var(--accent); font-size: 1.1rem; letter-spacing: 1px; line-height: 1; }
+.node-button[aria-pressed="true"] { border-color: rgba(215,190,162,.72); background: rgba(215,190,162,.2); }
 
 .drawing-stage { position: absolute; inset: 0; overflow: hidden; background: #060606; touch-action: none; }
 .camera-feed { position: absolute; inset: 0; width: 100%; height: 100%; background: #090909; object-fit: cover; }
 .reference-wrap { position: absolute; inset: 0; overflow: hidden; }
 .reference-image { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; max-width: none; max-height: none; opacity: .62; object-fit: contain; pointer-events: none; transform: translate(-50%, -50%) translate(0, 0) scale(1); transform-origin: center; user-select: none; -webkit-user-drag: none; transition: opacity .1s linear; }
 .reference-image[hidden] { display: none; }
+.paper-plane { position: absolute; top: 0; left: 0; z-index: 1; width: 1000px; height: 1000px; overflow: hidden; border: 2px solid rgba(215,190,162,.82); background: rgba(215,190,162,.025); box-shadow: 0 0 0 1px rgba(0,0,0,.22) inset; pointer-events: none; transform-origin: 0 0; }
+.paper-plane[hidden], .paper-plane__image[hidden], .mapping-guide[hidden] { display: none; }
+.paper-plane__image { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; pointer-events: none; transform: translate(-50%, -50%) translate(0, 0) scale(1); transform-origin: center; user-select: none; -webkit-user-drag: none; }
+.plane-markers { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.plane-marker { position: absolute; display: grid; width: 27px; height: 27px; place-items: center; border: 2px solid var(--accent); border-radius: 50%; background: rgba(17,17,15,.78); color: #fff8ef; font-size: .7rem; font-weight: 700; transform: translate(-50%, -50%); box-shadow: 0 2px 10px rgba(0,0,0,.38); }
+.mapping-guide { position: absolute; z-index: 3; top: 50%; right: 24px; left: 24px; max-width: 19rem; margin: 0 auto; padding: 13px 16px; border: 1px solid rgba(215,190,162,.48); border-radius: 15px; background: rgba(18,17,15,.82); color: #f8f0e8; font-size: .82rem; line-height: 1.4; text-align: center; transform: translateY(-50%); backdrop-filter: blur(12px); }
+.studio.is-mapping .reference-image, .studio.is-mapping .paper-plane { visibility: hidden; }
 .gesture-layer { position: absolute; inset: 0; z-index: 2; touch-action: none; }
+.tracking-overlay { position: absolute; z-index: 4; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .studio.is-locked .gesture-layer { display: none; }
 .empty-overlay-note { position: absolute; z-index: 3; top: 50%; right: 24px; left: 24px; max-width: 19rem; margin: 0 auto; padding: 14px 17px; border: 1px solid rgba(255,255,255,.16); border-radius: 15px; background: rgba(13,12,11,.67); color: #f5efe7; cursor: pointer; font-size: .82rem; line-height: 1.45; text-align: center; transform: translateY(-50%); backdrop-filter: blur(12px); }
 .studio.has-overlay.has-camera .empty-overlay-note { display: none; }
@@ -83,6 +95,7 @@ h1 { margin: 0; font-family: Iowan Old Style, Baskerville, Georgia, serif; font-
 .anchor-control__actions { display: grid; grid-template-columns: minmax(0, 1fr) 5.1rem; gap: 8px; }
 .control-button--anchor { border-color: rgba(215,190,162,.5); background: rgba(215,190,162,.15); color: #fff6ed; }
 .studio.is-tracking .control-button--anchor { border-color: rgba(189, 221, 183, .6); background: rgba(146, 202, 136, .2); }
+.studio.is-mapping .control-button--anchor { border-color: rgba(215,190,162,.76); background: rgba(215,190,162,.28); }
 
 .source-sheet { width: min(100%, 34rem); margin: auto 0 0; padding: 10px 16px max(20px, env(safe-area-inset-bottom)); border: 1px solid rgba(255,255,255,.12); border-radius: 25px 25px 0 0; background: #191816; color: var(--ink); box-shadow: 0 -16px 55px rgba(0,0,0,.42); }
 .source-sheet::backdrop { background: rgba(0,0,0,.62); backdrop-filter: blur(4px); }

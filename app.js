@@ -6,6 +6,7 @@
     studio: $('#studio'),
     drawingStage: $('#drawingStage'),
     referenceImage: $('#referenceImage'),
+    referenceVideo: $('#referenceVideo'),
     photoInput: $('#photoInput'),
     openPhotos: $('#openPhotosButton'),
     newReference: $('#newReferenceButton'),
@@ -15,6 +16,7 @@
     cameraMessage: $('#cameraMessage'),
     closeCamera: $('#closeCameraButton'),
     cameraPhoto: $('#cameraPhotoButton'),
+    startLiveCamera: $('#startLiveCameraButton'),
     capture: $('#captureButton'),
     fullScreen: $('#fullScreenButton'),
     canvas: $('#drawingCanvas'),
@@ -37,17 +39,21 @@
     opacity: 54,
     brush: 3,
     isDrawing: false,
+    drawingPointerId: null,
     lastPoint: null,
     strokes: [],
     image: { x: 0, y: 0, scale: 1 },
     gesturePointers: new Map(),
     gestureStart: null,
     stream: null,
+    cameraInStudio: false,
   };
 
   function setImageTransform() {
     const { x, y, scale } = state.image;
-    ui.referenceImage.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
+    const transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
+    ui.referenceImage.style.transform = transform;
+    ui.referenceVideo.style.transform = transform;
   }
 
   function updateDial(input, output, notch, value, min, max, suffix = '') {
@@ -59,6 +65,7 @@
   function updateOpacity() {
     state.opacity = Number(ui.opacity.value);
     ui.referenceImage.style.opacity = state.opacity / 100;
+    ui.referenceVideo.style.opacity = state.opacity / 100;
     updateDial(ui.opacity, ui.opacityValue, ui.opacityNotch, state.opacity, 5, 100, '%');
   }
 
@@ -107,9 +114,10 @@
   }
 
   function beginStroke(event) {
-    if (state.mode === 'move' || event.button === 2) return;
+    if (state.mode === 'move' || event.button === 2 || state.isDrawing || (event.pointerType === 'touch' && !event.isPrimary)) return;
     event.preventDefault();
     state.isDrawing = true;
+    state.drawingPointerId = event.pointerId;
     state.lastPoint = canvasPoint(event);
     ui.canvas.setPointerCapture(event.pointerId);
     ctx.save();
@@ -123,7 +131,7 @@
   }
 
   function drawStroke(event) {
-    if (!state.isDrawing) return;
+    if (!state.isDrawing || event.pointerId !== state.drawingPointerId) return;
     event.preventDefault();
     const point = canvasPoint(event);
     ctx.lineTo(point.x, point.y);
@@ -132,7 +140,7 @@
   }
 
   function endStroke(event) {
-    if (!state.isDrawing) return;
+    if (!state.isDrawing || event.pointerId !== state.drawingPointerId) return;
     const point = canvasPoint(event);
     if (Math.abs(point.x - state.lastPoint.x) < .1 && Math.abs(point.y - state.lastPoint.y) < .1) {
       ctx.beginPath();
@@ -142,6 +150,7 @@
     }
     ctx.restore();
     state.isDrawing = false;
+    state.drawingPointerId = null;
     state.lastPoint = null;
     saveHistory();
   }
@@ -186,6 +195,9 @@
   }
 
   function loadReference(source) {
+    stopCamera();
+    ui.referenceVideo.hidden = true;
+    ui.referenceImage.hidden = false;
     ui.referenceImage.onload = () => {
       state.image = { x: 0, y: 0, scale: 1 };
       setImageTransform();
@@ -202,15 +214,18 @@
   }
 
   async function openCamera() {
+    stopCamera();
     if (!navigator.mediaDevices?.getUserMedia) {
       ui.cameraMessage.textContent = 'Camera access is not available in this browser. Choose a photo instead.';
       ui.cameraMessage.hidden = false;
       ui.capture.disabled = true;
+      ui.startLiveCamera.disabled = true;
       ui.cameraSheet.showModal();
       return;
     }
     ui.cameraMessage.hidden = true;
     ui.capture.disabled = false;
+    ui.startLiveCamera.disabled = false;
     ui.cameraSheet.showModal();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -223,6 +238,7 @@
       ui.cameraMessage.textContent = 'Allow camera access to use a live reference, or choose a photo instead.';
       ui.cameraMessage.hidden = false;
       ui.capture.disabled = true;
+      ui.startLiveCamera.disabled = true;
     }
   }
 
@@ -230,6 +246,25 @@
     state.stream?.getTracks().forEach((track) => track.stop());
     state.stream = null;
     ui.cameraVideo.srcObject = null;
+    ui.referenceVideo.srcObject = null;
+    ui.referenceVideo.hidden = true;
+    state.cameraInStudio = false;
+  }
+
+  function startLiveCamera() {
+    if (!state.stream) return;
+    state.cameraInStudio = true;
+    ui.referenceImage.hidden = true;
+    ui.referenceVideo.hidden = false;
+    ui.referenceVideo.srcObject = state.stream;
+    ui.referenceVideo.play().catch(() => {});
+    ui.cameraVideo.srcObject = null;
+    state.image = { x: 0, y: 0, scale: 1 };
+    setImageTransform();
+    updateOpacity();
+    ui.cameraSheet.close();
+    revealStudio();
+    setTool('draw');
   }
 
   function captureCamera() {
@@ -239,7 +274,6 @@
     captureCanvas.height = ui.cameraVideo.videoHeight;
     captureCanvas.getContext('2d').drawImage(ui.cameraVideo, 0, 0);
     loadReference(captureCanvas.toDataURL('image/jpeg', .92));
-    stopCamera();
     ui.cameraSheet.close();
   }
 
@@ -297,7 +331,7 @@
   }
 
   ui.openPhotos.addEventListener('click', choosePhoto);
-  ui.newReference.addEventListener('click', choosePhoto);
+  ui.newReference.addEventListener('click', openCamera);
   ui.photoInput.addEventListener('change', (event) => {
     const [file] = event.target.files;
     if (file) loadReference(URL.createObjectURL(file));
@@ -306,8 +340,9 @@
   ui.openCamera.addEventListener('click', openCamera);
   ui.closeCamera.addEventListener('click', () => { stopCamera(); ui.cameraSheet.close(); });
   ui.cameraPhoto.addEventListener('click', choosePhoto);
+  ui.startLiveCamera.addEventListener('click', startLiveCamera);
   ui.capture.addEventListener('click', captureCamera);
-  ui.cameraSheet.addEventListener('close', stopCamera);
+  ui.cameraSheet.addEventListener('close', () => { if (!state.cameraInStudio) stopCamera(); });
   ui.fullScreen.addEventListener('click', toggleFullscreen);
   ui.opacity.addEventListener('input', updateOpacity);
   ui.brush.addEventListener('input', updateBrush);
@@ -318,11 +353,13 @@
   ui.canvas.addEventListener('pointermove', drawStroke);
   ui.canvas.addEventListener('pointerup', endStroke);
   ui.canvas.addEventListener('pointercancel', endStroke);
+  ui.canvas.addEventListener('lostpointercapture', endStroke);
   ui.gestureLayer.addEventListener('pointerdown', gestureStart);
   ui.gestureLayer.addEventListener('pointermove', gestureMove);
   ui.gestureLayer.addEventListener('pointerup', gestureEnd);
   ui.gestureLayer.addEventListener('pointercancel', gestureEnd);
   window.addEventListener('resize', fitCanvas);
+  window.addEventListener('pagehide', stopCamera);
 
   updateOpacity();
   updateBrush();

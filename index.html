@@ -53,7 +53,8 @@
 
         <div class="drawing-stage" id="drawingStage">
           <div class="reference-wrap" id="referenceWrap" aria-hidden="true">
-            <img class="reference-image" id="referenceImage" alt="" />
+            <img class="reference-media reference-image" id="referenceImage" alt="" />
+            <video class="reference-media reference-video" id="referenceVideo" autoplay muted playsinline hidden></video>
             <div class="gesture-layer" id="gestureLayer"></div>
           </div>
           <canvas id="drawingCanvas" aria-label="Your drawing canvas"></canvas>
@@ -106,8 +107,11 @@
         <p class="camera-message" id="cameraMessage" hidden></p>
       </div>
       <div class="camera-sheet__actions">
-        <button class="source-button" id="cameraPhotoButton" type="button">Choose a photo instead</button>
-        <button class="capture-button" id="captureButton" type="button" aria-label="Capture photo"><span></span></button>
+        <button class="source-button source-button--primary" id="startLiveCameraButton" type="button">Trace with live camera</button>
+        <div class="camera-sheet__secondary-actions">
+          <button class="source-button" id="cameraPhotoButton" type="button">Choose a photo</button>
+          <button class="capture-button" id="captureButton" type="button" aria-label="Capture a still photo"><span></span></button>
+        </div>
       </div>
     </dialog>
 

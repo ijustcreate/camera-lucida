@@ -6,45 +6,41 @@
     <meta name="theme-color" content="#11110f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Lucida" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311110f'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23c9b59d' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23c9b59d'/%3E%3C/svg%3E" />
-    <link rel="manifest" href="./manifest.webmanifest?v=9" />
-    <title>Lucida — Trace on paper</title>
-    <link rel="stylesheet" href="./styles.css?v=9" />
+    <meta name="apple-mobile-web-app-title" content="Plane Lock" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311110f'/%3E%3Cpath d='M12 17h40v30H12z' fill='none' stroke='%23c9b59d' stroke-width='4'/%3E%3Cpath d='M12 17l10 10m30-10L42 27m-30 20 10-10m30 10L42 37' stroke='%23c9b59d' stroke-width='3'/%3E%3C/svg%3E" />
+    <link rel="manifest" href="./manifest.webmanifest?v=10" />
+    <title>Plane Lock — Paper mapper</title>
+    <link rel="stylesheet" href="./styles.css?v=10" />
   </head>
   <body>
     <main class="app-shell" id="appShell">
       <section class="welcome" id="welcome" aria-labelledby="welcomeTitle">
         <div class="welcome__topline">
           <span class="mark" aria-hidden="true"></span>
-          <span>Camera lucida</span>
+          <span>Plane lock</span>
         </div>
         <div class="welcome__copy">
-          <p class="eyebrow">A quiet drawing surface</p>
-          <h1 id="welcomeTitle">Trace on<br />real paper.</h1>
-          <p>Look through your camera, lay an image over the scene, and draw directly on the page in front of you.</p>
+          <p class="eyebrow">Camera-based surface mapping</p>
+          <h1 id="welcomeTitle">Map real<br />paper.</h1>
+          <p>Make a piece of paper into a perspective-locked plane in your live camera view. No tracing tools—just the map, the lock, and the data behind it.</p>
         </div>
         <div class="source-actions">
           <button class="source-button source-button--primary" id="openCameraButton" type="button">
-            <span class="source-button__glyph" aria-hidden="true">◉</span>
-            Open tracing camera
-          </button>
-          <button class="source-button" id="openPhotosButton" type="button">
-            <span class="source-button__glyph" aria-hidden="true">▧</span>
-            Choose overlay photo
+            <span class="source-button__glyph" aria-hidden="true">▱</span>
+            Open plane camera
           </button>
         </div>
-        <p class="welcome__hint">Place your paper below the phone, then line the overlay up with it.</p>
+        <p class="welcome__hint">For the strongest lock, keep paper edges and nearby desk texture in the camera view.</p>
       </section>
 
-      <section class="studio" id="studio" aria-label="Camera lucida tracing camera" hidden>
+      <section class="studio" id="studio" aria-label="Paper plane mapping camera" hidden>
         <header class="studio-header">
-          <button class="icon-button" id="newReferenceButton" type="button" aria-label="Add or change an overlay image" title="Add or change an overlay image">
+          <button class="icon-button" id="remapHeaderButton" type="button" aria-label="Map paper plane" title="Map paper plane">
             <span aria-hidden="true">＋</span>
           </button>
-          <div class="studio-title" aria-label="Camera lucida">
+          <div class="studio-title" aria-label="Plane lock">
             <span class="mark mark--small" aria-hidden="true"></span>
-            <span>Live camera</span>
+            <span>Plane camera</span>
           </div>
           <div class="studio-header__tools">
             <button class="node-button" id="nodesButton" type="button" aria-pressed="false" aria-label="Show tracking nodes">
@@ -59,63 +55,40 @@
 
         <div class="drawing-stage" id="drawingStage">
           <video class="camera-feed" id="cameraFeed" autoplay muted playsinline></video>
-          <div class="reference-wrap" id="referenceWrap">
-            <img class="reference-image" id="referenceImage" alt="Your tracing overlay" hidden />
-            <div class="paper-plane" id="paperPlane" hidden aria-hidden="true">
-              <img class="paper-plane__image" id="planeImage" alt="" hidden />
+          <div class="paper-plane" id="paperPlane" hidden aria-label="Mapped paper plane">
+            <div class="paper-plane__surface">
+              <span class="paper-plane__axis paper-plane__axis--x">x</span>
+              <span class="paper-plane__axis paper-plane__axis--y">y</span>
+              <span class="paper-plane__label">paper plane</span>
             </div>
-            <div class="plane-markers" id="planeMarkers" aria-hidden="true"></div>
-            <div class="mapping-guide" id="mappingGuide" aria-live="polite" hidden></div>
-            <div class="gesture-layer" id="gestureLayer"></div>
           </div>
-          <button class="empty-overlay-note" id="emptyOverlayNote" type="button">Add a photo to place it over the live camera.</button>
+          <div class="plane-markers" id="planeMarkers" aria-hidden="true"></div>
+          <div class="mapping-guide" id="mappingGuide" aria-live="polite" hidden></div>
           <canvas class="tracking-overlay" id="trackingOverlay" aria-hidden="true"></canvas>
+          <button class="empty-overlay-note" id="cameraNote" type="button">Allow camera access to map a paper plane.</button>
         </div>
 
-        <section class="control-dock" aria-label="Overlay controls">
-          <div class="overlay-control-card">
-            <div class="overlay-control-card__heading">
-              <span>Overlay opacity</span>
-              <output id="opacityValue" for="opacityRange">62%</output>
+        <section class="control-dock" aria-label="Paper plane controls">
+          <div class="plane-control-card">
+            <div class="plane-control-card__heading">
+              <span>Paper plane</span>
+              <output id="planeStatus" aria-live="polite">Open camera first</output>
             </div>
-            <input id="opacityRange" type="range" min="0" max="100" value="62" aria-label="Overlay opacity" />
-            <div class="overlay-control-card__actions">
-              <button class="control-button" id="lockButton" type="button" aria-pressed="false">Lock image</button>
-              <button class="control-button control-button--quiet" id="resetButton" type="button">Reset position</button>
+            <p id="planeHint">The mapper looks for real visual features around the sheet, then estimates the paper’s perspective every frame.</p>
+            <div class="plane-control-card__readout">
+              <span id="nodeReadout">0 stable nodes</span>
+              <span id="lockReadout">Not mapped</span>
             </div>
-            <div class="anchor-control" aria-label="Paper plane controls">
-              <div class="anchor-control__heading">
-                <span>Paper plane</span>
-                <output id="anchorStatus" aria-live="polite">Not mapped</output>
-              </div>
-              <p id="anchorHint">Map the four corners of your paper. Then move the image directly across its surface.</p>
-              <div class="anchor-control__actions">
-                <button class="control-button control-button--anchor" id="anchorButton" type="button">Map paper plane</button>
-                <button class="control-button control-button--quiet" id="clearAnchorButton" type="button" disabled>Reset</button>
-              </div>
+            <div class="plane-control-card__actions">
+              <button class="control-button control-button--anchor" id="mapButton" type="button">Map paper plane</button>
+              <button class="control-button control-button--quiet" id="resetButton" type="button" disabled>Reset</button>
             </div>
           </div>
         </section>
       </section>
     </main>
 
-    <input id="photoInput" type="file" accept="image/*" hidden />
-
-    <dialog class="source-sheet" id="sourceSheet" aria-labelledby="sourceTitle">
-      <div class="source-sheet__bar"></div>
-      <div class="source-sheet__header">
-        <div>
-          <p class="eyebrow">Your overlay</p>
-          <h2 id="sourceTitle">Add an image</h2>
-        </div>
-        <button class="icon-button" id="closeSourceButton" type="button" aria-label="Close image chooser">×</button>
-      </div>
-      <button class="source-button source-button--primary" id="sourcePhotosButton" type="button">Choose from Photos</button>
-      <button class="source-button" id="captureOverlayButton" type="button">Capture the camera view</button>
-      <p class="source-sheet__hint">Drag the overlay with one finger. Pinch with two fingers to resize it.</p>
-    </dialog>
-
     <script src="https://cdn.jsdelivr.net/npm/jsfeat@0.0.8/build/jsfeat-min.js"></script>
-    <script src="./app.js?v=9"></script>
+    <script src="./app.js?v=10"></script>
   </body>
 </html>

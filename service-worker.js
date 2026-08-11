@@ -1,5 +1,5 @@
-const CACHE_NAME = 'lucida-v9';
-const ASSETS = ['./', './index.html?v=9', './styles.css?v=9', './app.js?v=9', './manifest.webmanifest?v=9'];
+const CACHE_NAME = 'plane-lock-v10';
+const ASSETS = ['./', './index.html?v=10', './styles.css?v=10', './app.js?v=10', './manifest.webmanifest?v=10'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
@@ -12,16 +12,8 @@ self.addEventListener('activate', (event) => {
     self.clients.claim(),
   ]));
 });
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response.ok && new URL(event.request.url).origin === self.location.origin) {
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
-        }
-        return response;
-      })
-      .catch(() => caches.match(event.request)),
-  );
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });

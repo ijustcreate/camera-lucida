@@ -1,22 +1,15 @@
-# Lucida
+# Plane Lock
 
-A camera-lucida-style tracing viewer for iPhone. It is made for drawing on real paper while looking through the phone.
+A camera-first paper-plane mapper for iPhone. It intentionally contains no tracing or drawing tools.
 
 ## Use it
 
-1. Open the tracing camera and allow access to the back camera.
-2. Add an overlay from Photos, or capture the current camera view as an overlay.
-3. Drag the overlay with one finger and pinch with two fingers to line it up with the paper beneath your phone.
-4. Use the opacity slider to see the live camera through the image, then lock it in place before drawing on paper.
+1. Open the rear camera and allow access.
+2. Tap **Map paper plane**.
+3. Tap the paper corners in order: top-left, top-right, bottom-right, bottom-left.
+4. The perspective grid becomes the mapped plane. It follows the camera view using tracked natural features.
+5. Tap **Nodes** to inspect the feature points used for the current lock.
 
-## Mapped paper plane
+Teal nodes have survived multiple frames. Gold nodes are new or weaker candidates. A paper edge plus nearby desk grain, tape, or other texture gives the tracker the most reliable lock.
 
-After you add an overlay, tap **Map paper plane** and tap the paper's four visible corners clockwise, starting at the top-left. Lucida perspective-maps the image to that physical sheet. Drag the image with one finger and pinch with two fingers to place and size it anywhere on the mapped paper.
-
-Lucida saves a small, private visual fingerprint of the live camera view with the plane. That lets it compensate for small camera shifts while the same flat, textured surface remains visible. The calibration stays only on that iPhone until you reset it; it does not save or upload the camera image.
-
-Tap **Nodes** in the camera header to see the natural visual features Lucida is using. Teal nodes have survived multiple frames; gold nodes are new or weaker candidates. If the surface has too few nodes, keep more paper edge, desk grain, tape, or other texture visible.
-
-This is a browser-based visual stabilizer, not ARKit world tracking. It works best with visible paper edges, desk grain, tape, or other detail, and should be remapped after a large movement, lighting change, or a different surface.
-
-The reference image and camera stay in your browser; no photo is uploaded to a server.
+This is browser-based planar tracking: it estimates the paper’s position and perspective in the camera image with optical flow, RANSAC homography, and visual relocalization. It is not a native ARKit world anchor and will ask to relocalize or remap after large motion, a major lighting change, or if the surface leaves the camera view.

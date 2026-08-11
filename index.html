@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Lucida" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311110f'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23c9b59d' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23c9b59d'/%3E%3C/svg%3E" />
-    <link rel="manifest" href="./manifest.webmanifest?v=6" />
+    <link rel="manifest" href="./manifest.webmanifest?v=7" />
     <title>Lucida — Trace on paper</title>
-    <link rel="stylesheet" href="./styles.css?v=6" />
+    <link rel="stylesheet" href="./styles.css?v=7" />
   </head>
   <body>
     <main class="app-shell" id="appShell">
@@ -71,6 +71,17 @@
               <button class="control-button" id="lockButton" type="button" aria-pressed="false">Lock image</button>
               <button class="control-button control-button--quiet" id="resetButton" type="button">Reset position</button>
             </div>
+            <div class="anchor-control" aria-label="Smart paper anchor">
+              <div class="anchor-control__heading">
+                <span>Smart paper anchor</span>
+                <output id="anchorStatus" aria-live="polite">No surface saved</output>
+              </div>
+              <p id="anchorHint">Align the overlay to your paper, then save the surface. Lucida will use camera details to steady it.</p>
+              <div class="anchor-control__actions">
+                <button class="control-button control-button--anchor" id="anchorButton" type="button">Set paper anchor</button>
+                <button class="control-button control-button--quiet" id="clearAnchorButton" type="button" disabled>Clear</button>
+              </div>
+            </div>
           </div>
         </section>
       </section>
@@ -92,6 +103,6 @@
       <p class="source-sheet__hint">Drag the overlay with one finger. Pinch with two fingers to resize it.</p>
     </dialog>
 
-    <script src="./app.js?v=6"></script>
+    <script src="./app.js?v=7"></script>
   </body>
 </html>

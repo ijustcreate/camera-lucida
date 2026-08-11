@@ -75,6 +75,14 @@ h1 { margin: 0; font-family: Iowan Old Style, Baskerville, Georgia, serif; font-
 .control-button { min-height: 42px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: rgba(255,255,255,.08); color: var(--ink); cursor: pointer; font-size: .76rem; }
 .control-button[aria-pressed="true"] { border-color: rgba(215,190,162,.6); background: rgba(215,190,162,.18); color: #fff7ee; }
 .control-button--quiet { color: var(--muted); }
+.control-button:disabled { cursor: not-allowed; opacity: .42; }
+.anchor-control { margin-top: 13px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.1); }
+.anchor-control__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; color: var(--muted); font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; }
+.anchor-control__heading output { overflow: hidden; max-width: 13rem; color: var(--accent); font-size: .67rem; letter-spacing: .02em; text-align: right; text-overflow: ellipsis; text-transform: none; white-space: nowrap; }
+.anchor-control p { margin: 7px 0 10px; color: #aaa49b; font-size: .73rem; line-height: 1.4; }
+.anchor-control__actions { display: grid; grid-template-columns: minmax(0, 1fr) 5.1rem; gap: 8px; }
+.control-button--anchor { border-color: rgba(215,190,162,.5); background: rgba(215,190,162,.15); color: #fff6ed; }
+.studio.is-tracking .control-button--anchor { border-color: rgba(189, 221, 183, .6); background: rgba(146, 202, 136, .2); }
 
 .source-sheet { width: min(100%, 34rem); margin: auto 0 0; padding: 10px 16px max(20px, env(safe-area-inset-bottom)); border: 1px solid rgba(255,255,255,.12); border-radius: 25px 25px 0 0; background: #191816; color: var(--ink); box-shadow: 0 -16px 55px rgba(0,0,0,.42); }
 .source-sheet::backdrop { background: rgba(0,0,0,.62); backdrop-filter: blur(4px); }

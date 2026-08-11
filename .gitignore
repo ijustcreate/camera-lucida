@@ -1,0 +1,3 @@
+.netlify/
+.playwright-cli/
+*.log

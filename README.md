@@ -1,15 +1,21 @@
 # Plane Lock
 
-A camera-first paper-plane mapper for iPhone. It intentionally contains no tracing or drawing tools.
+Plane Lock is a camera-first paper detector and planar tracker for iPhone Safari. It contains no drawing or tracing tools.
 
-## Use it
+## What the vision pipeline does
 
-1. Open the rear camera and allow access.
-2. The point-node overlay starts automatically while the camera looks for a sheet.
-3. Put the entire paper in frame, with all four edges and some contrasting desk visible. The app outlines an identified sheet and enables **Lock detected sheet**.
-4. Tap **Lock detected sheet**. The perspective grid becomes the mapped plane and follows the camera view using tracked natural features.
-5. Use **Find again** to clear the current plane and search for another sheet.
+1. Crops the rear-camera image to exactly match the visible screen.
+2. Calculates a grayscale image and dynamic contrast statistics.
+3. Runs Gaussian smoothing and Canny edge detection.
+4. Closes small edge gaps and extracts contours.
+5. Uses Douglas-Peucker polygon fitting to find convex four-corner candidates.
+6. Scores candidate area, contour fill, corner angles, brightness contrast, page aspect, and distance from every screen edge.
+7. Rejects partial sheets and asks for the whole paper to be visible.
+8. Confirms the same four corners across five consecutive frames before enabling **Lock detected sheet**.
+9. After locking, tracks Shi-Tomasi feature points with pyramidal Lucas-Kanade optical flow and recalculates the paper homography with RANSAC.
 
-Teal nodes have survived multiple frames. Gold nodes are new or weaker candidates. A paper edge plus nearby desk grain, tape, or other texture gives the tracker the most reliable lock. The detector intentionally refuses partial sheets: when it cannot see a full candidate, it says **No paper detected** and asks for the whole paper to be visible.
+Tap **Vision** to show or hide the live Canny edge samples, candidate contours, numbered paper corners, and tracking points.
 
-This is browser-based planar tracking: it estimates the paper’s position and perspective in the camera image with optical flow, RANSAC homography, and visual relocalization. It is not a native ARKit world anchor and will ask to relocalize or remap after large motion, a major lighting change, or if the surface leaves the camera view.
+## Browser limitation
+
+This is a browser-based planar visual lock. It estimates the sheet position and perspective in the current camera image. It is not an ARKit world anchor and cannot retain a true device-level 3D anchor after the paper and surrounding scene fully leave the camera view.

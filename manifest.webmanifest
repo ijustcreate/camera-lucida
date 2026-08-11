@@ -1,9 +1,9 @@
 {
-  "name": "Plane Lock — Paper mapper",
+  "name": "Plane Lock - Paper vision",
   "short_name": "Plane Lock",
-  "start_url": "./?v=11",
+  "start_url": "./?v=12",
   "display": "standalone",
-  "background_color": "#11110f",
-  "theme_color": "#11110f",
-  "description": "Map and visually lock a plane to real paper through the iPhone camera."
+  "background_color": "#0b0c0b",
+  "theme_color": "#0b0c0b",
+  "description": "Detect a complete sheet from its edges and corners, then visually lock a plane to it."
 }

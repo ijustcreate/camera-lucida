@@ -3,90 +3,73 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#11110f" />
+    <meta name="theme-color" content="#0b0c0b" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Plane Lock" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311110f'/%3E%3Cpath d='M12 17h40v30H12z' fill='none' stroke='%23c9b59d' stroke-width='4'/%3E%3Cpath d='M12 17l10 10m30-10L42 27m-30 20 10-10m30 10L42 37' stroke='%23c9b59d' stroke-width='3'/%3E%3C/svg%3E" />
-    <link rel="manifest" href="./manifest.webmanifest?v=11" />
-    <title>Plane Lock — Paper mapper</title>
-    <link rel="stylesheet" href="./styles.css?v=11" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0c0b'/%3E%3Cpath d='M13 18l39 4-4 29-34-4z' fill='none' stroke='%236ee7bd' stroke-width='4'/%3E%3C/svg%3E" />
+    <link rel="manifest" href="./manifest.webmanifest?v=12" />
+    <title>Plane Lock - Paper vision</title>
+    <link rel="stylesheet" href="./styles.css?v=12" />
   </head>
   <body>
-    <main class="app-shell" id="appShell">
+    <main class="app" id="app">
       <section class="welcome" id="welcome" aria-labelledby="welcomeTitle">
-        <div class="welcome__topline">
-          <span class="mark" aria-hidden="true"></span>
-          <span>Plane lock</span>
-        </div>
+        <div class="brand"><span class="brand__mark" aria-hidden="true"></span> Plane Lock</div>
         <div class="welcome__copy">
-          <p class="eyebrow">Camera-based surface mapping</p>
-          <h1 id="welcomeTitle">Map real<br />paper.</h1>
-          <p>Point tracking starts immediately. Plane Lock finds a complete sheet in the camera, then asks you to lock the identified paper.</p>
+          <p class="kicker">Paper vision / spatial lock</p>
+          <h1 id="welcomeTitle">Find the sheet.<br />Lock the plane.</h1>
+          <p>Real edge detection finds the paper outline, calculates all four corners, and confirms the sheet across several camera frames before you can lock it.</p>
         </div>
-        <div class="source-actions">
-          <button class="source-button source-button--primary" id="openCameraButton" type="button">
-            <span class="source-button__glyph" aria-hidden="true">▱</span>
-            Open plane camera
-          </button>
-        </div>
-        <p class="welcome__hint">Put the entire sheet in view, with its edges and a little surrounding desk texture visible.</p>
+        <button class="primary-button" id="openCameraButton" type="button">
+          <span aria-hidden="true">◇</span>
+          Start paper scanner
+        </button>
+        <p class="welcome__note">Use the rear camera. Keep all four paper edges and a strip of the surface around them visible.</p>
       </section>
 
-      <section class="studio" id="studio" aria-label="Paper plane mapping camera" hidden>
-        <header class="studio-header">
-          <button class="icon-button" id="remapHeaderButton" type="button" aria-label="Find another paper sheet" title="Find another paper sheet">
-            <span aria-hidden="true">↻</span>
-          </button>
-          <div class="studio-title" aria-label="Plane lock">
-            <span class="mark mark--small" aria-hidden="true"></span>
-            <span>Plane camera</span>
-          </div>
-          <div class="studio-header__tools">
-            <button class="node-button" id="nodesButton" type="button" aria-pressed="false" aria-label="Show tracking nodes">
-              <span class="node-button__glyph" aria-hidden="true">•••</span>
-              <span>Nodes</span>
+      <section class="scanner" id="scanner" aria-label="Automatic paper scanner" hidden>
+        <video class="camera" id="cameraFeed" autoplay muted playsinline></video>
+        <canvas class="vision-overlay" id="visionOverlay" aria-hidden="true"></canvas>
+
+        <header class="scanner-header">
+          <button class="round-button" id="restartButton" type="button" aria-label="Find another sheet" title="Find another sheet">↻</button>
+          <div class="scanner-brand"><span class="brand__mark brand__mark--small" aria-hidden="true"></span> Plane Lock</div>
+          <div class="scanner-tools">
+            <button class="vision-button" id="visionButton" type="button" aria-pressed="true">
+              <span class="vision-button__dots" aria-hidden="true">•••</span>
+              Vision
             </button>
-            <button class="icon-button" id="fullScreenButton" type="button" aria-label="Toggle full screen" title="Toggle full screen">
-              <span aria-hidden="true">⛶</span>
-            </button>
+            <button class="round-button" id="fullscreenButton" type="button" aria-label="Toggle full screen" title="Toggle full screen">⛶</button>
           </div>
         </header>
 
-        <div class="drawing-stage" id="drawingStage">
-          <video class="camera-feed" id="cameraFeed" autoplay muted playsinline></video>
-          <div class="paper-plane" id="paperPlane" hidden aria-label="Mapped paper plane">
-            <div class="paper-plane__surface">
-              <span class="paper-plane__axis paper-plane__axis--x">x</span>
-              <span class="paper-plane__axis paper-plane__axis--y">y</span>
-              <span class="paper-plane__label">paper plane</span>
-            </div>
-          </div>
-          <canvas class="tracking-overlay" id="trackingOverlay" aria-hidden="true"></canvas>
-          <button class="empty-overlay-note" id="cameraNote" type="button">Allow camera access to search for a paper sheet.</button>
-        </div>
+        <button class="camera-permission" id="cameraPermission" type="button">Camera access is required. Tap to try again.</button>
 
-        <section class="control-dock" aria-label="Paper plane controls">
-          <div class="plane-control-card">
-            <div class="plane-control-card__heading">
-              <span>Paper plane</span>
-              <output id="planeStatus" aria-live="polite">Open camera first</output>
-            </div>
-            <p id="planeHint">Point tracking scans the live camera for a complete paper sheet and its surrounding visual detail.</p>
-            <div class="plane-control-card__readout">
-              <span id="nodeReadout">0 stable nodes</span>
-              <span id="lockReadout">Not mapped</span>
-            </div>
-            <div class="plane-control-card__actions">
-              <button class="control-button control-button--anchor" id="mapButton" type="button" disabled>Looking for paper</button>
-              <button class="control-button control-button--quiet" id="resetButton" type="button" disabled>Find again</button>
-            </div>
+        <section class="readout" aria-label="Paper detection status">
+          <div class="readout__topline">
+            <span class="state-light" id="stateLight" aria-hidden="true"></span>
+            <output id="statusText" aria-live="polite">Starting vision engine</output>
+            <span class="confidence" id="confidenceText">0%</span>
+          </div>
+          <p class="instruction" id="instructionText">Open the camera and show the complete sheet.</p>
+          <div class="metrics" aria-label="Vision measurements">
+            <div><span>Edges</span><strong id="edgeCount">0</strong></div>
+            <div><span>Corners</span><strong id="cornerCount">0</strong></div>
+            <div><span>Stable</span><strong id="stabilityCount">0/5</strong></div>
+            <div><span>Points</span><strong id="pointCount">0</strong></div>
+          </div>
+          <div class="readout__actions">
+            <button class="lock-button" id="lockButton" type="button" disabled>Searching for paper</button>
+            <button class="quiet-button" id="clearButton" type="button">Find again</button>
           </div>
         </section>
+
+        <canvas id="processingCanvas" hidden></canvas>
       </section>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/jsfeat@0.0.8/build/jsfeat-min.js"></script>
-    <script src="./app.js?v=11"></script>
+    <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+    <script defer src="./app.js?v=12"></script>
   </body>
 </html>

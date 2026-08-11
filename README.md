@@ -1,12 +1,12 @@
 # Lucida
 
-A touch-first, camera-lucida-style drawing surface for iPhone.
+A camera-lucida-style tracing viewer for iPhone. It is made for drawing on real paper while looking through the phone.
 
 ## Use it
 
-1. Choose a photo from your library, capture one, or trace directly with the live back camera.
-2. Lower the reference image with the **Image** dial.
-3. Draw, move/pinch the reference, erase, or undo directly on the page.
-4. For a more immersive canvas, use the full-screen button or add the site to your iPhone Home Screen.
+1. Open the tracing camera and allow access to the back camera.
+2. Add an overlay from Photos, or capture the current camera view as an overlay.
+3. Drag the overlay with one finger and pinch with two fingers to line it up with the paper beneath your phone.
+4. Use the opacity slider to see the live camera through the image, then lock it in place before drawing on paper.
 
-The reference image stays only in your browser; no photo is uploaded to a server.
+The reference image and camera stay in your browser; no photo is uploaded to a server.

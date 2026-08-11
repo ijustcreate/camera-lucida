@@ -1,5 +1,5 @@
-const CACHE_NAME = 'lucida-v4';
-const ASSETS = ['./', './index.html?v=4', './styles.css?v=4', './app.js?v=4', './manifest.webmanifest?v=4'];
+const CACHE_NAME = 'lucida-v6';
+const ASSETS = ['./', './index.html?v=6', './styles.css?v=6', './app.js?v=6', './manifest.webmanifest?v=6'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));

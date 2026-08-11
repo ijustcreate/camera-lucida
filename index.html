@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Lucida" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311110f'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23c9b59d' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23c9b59d'/%3E%3C/svg%3E" />
-    <link rel="manifest" href="./manifest.webmanifest?v=4" />
-    <title>Lucida — Draw from light</title>
-    <link rel="stylesheet" href="./styles.css?v=4" />
+    <link rel="manifest" href="./manifest.webmanifest?v=6" />
+    <title>Lucida — Trace on paper</title>
+    <link rel="stylesheet" href="./styles.css?v=6" />
   </head>
   <body>
     <main class="app-shell" id="appShell">
@@ -21,30 +21,30 @@
         </div>
         <div class="welcome__copy">
           <p class="eyebrow">A quiet drawing surface</p>
-          <h1 id="welcomeTitle">Draw from<br />what you see.</h1>
-          <p>Place an image on the page, lower it to a whisper, and trace at your own pace.</p>
+          <h1 id="welcomeTitle">Trace on<br />real paper.</h1>
+          <p>Look through your camera, lay an image over the scene, and draw directly on the page in front of you.</p>
         </div>
         <div class="source-actions">
           <button class="source-button source-button--primary" id="openCameraButton" type="button">
             <span class="source-button__glyph" aria-hidden="true">◉</span>
-            Use camera
+            Open tracing camera
           </button>
           <button class="source-button" id="openPhotosButton" type="button">
             <span class="source-button__glyph" aria-hidden="true">▧</span>
-            Choose a photo
+            Choose overlay photo
           </button>
         </div>
-        <p class="welcome__hint">For the best canvas, turn your phone sideways after choosing an image.</p>
+        <p class="welcome__hint">Place your paper below the phone, then line the overlay up with it.</p>
       </section>
 
-      <section class="studio" id="studio" aria-label="Camera lucida drawing workspace" hidden>
+      <section class="studio" id="studio" aria-label="Camera lucida tracing camera" hidden>
         <header class="studio-header">
-          <button class="icon-button" id="newReferenceButton" type="button" aria-label="Choose another reference image" title="Choose another reference image">
+          <button class="icon-button" id="newReferenceButton" type="button" aria-label="Add or change an overlay image" title="Add or change an overlay image">
             <span aria-hidden="true">＋</span>
           </button>
           <div class="studio-title" aria-label="Camera lucida">
             <span class="mark mark--small" aria-hidden="true"></span>
-            <span>Lucida</span>
+            <span>Live camera</span>
           </div>
           <button class="icon-button" id="fullScreenButton" type="button" aria-label="Toggle full screen" title="Toggle full screen">
             <span aria-hidden="true">⛶</span>
@@ -52,43 +52,25 @@
         </header>
 
         <div class="drawing-stage" id="drawingStage">
-          <div class="reference-wrap" id="referenceWrap" aria-hidden="true">
-            <img class="reference-media reference-image" id="referenceImage" alt="" />
-            <video class="reference-media reference-video" id="referenceVideo" autoplay muted playsinline hidden></video>
+          <video class="camera-feed" id="cameraFeed" autoplay muted playsinline></video>
+          <div class="reference-wrap" id="referenceWrap">
+            <img class="reference-image" id="referenceImage" alt="Your tracing overlay" hidden />
             <div class="gesture-layer" id="gestureLayer"></div>
           </div>
-          <canvas id="drawingCanvas" aria-label="Your drawing canvas"></canvas>
-          <div class="stage-note" id="stageNote">Move the image with one finger. Pinch to scale.</div>
+          <button class="empty-overlay-note" id="emptyOverlayNote" type="button">Add a photo to place it over the live camera.</button>
         </div>
 
-        <section class="control-dock" aria-label="Drawing controls">
-          <div class="tool-row" role="group" aria-label="Tool">
-            <button class="tool-button is-active" type="button" data-tool="draw" aria-pressed="true">
-              <span class="tool-icon" aria-hidden="true">✎</span><span>Draw</span>
-            </button>
-            <button class="tool-button" type="button" data-tool="move" aria-pressed="false">
-              <span class="tool-icon" aria-hidden="true">✥</span><span>Move</span>
-            </button>
-            <button class="tool-button" type="button" data-tool="erase" aria-pressed="false">
-              <span class="tool-icon" aria-hidden="true">⌫</span><span>Erase</span>
-            </button>
-          </div>
-
-          <div class="control-row">
-            <label class="dial-control" for="opacityRange">
-              <span class="dial-control__cap"><span class="dial-control__notch" id="opacityNotch"></span></span>
-              <span class="dial-control__label">Image</span>
-              <input id="opacityRange" type="range" min="5" max="100" value="54" aria-label="Reference image opacity" />
-              <output id="opacityValue" for="opacityRange">54%</output>
-            </label>
-            <label class="dial-control dial-control--small" for="brushRange">
-              <span class="dial-control__cap"><span class="dial-control__notch" id="brushNotch"></span></span>
-              <span class="dial-control__label">Line</span>
-              <input id="brushRange" type="range" min="1" max="16" value="3" aria-label="Line thickness" />
-              <output id="brushValue" for="brushRange">3</output>
-            </label>
-            <button class="round-action" id="undoButton" type="button" aria-label="Undo last line" title="Undo last line"><span aria-hidden="true">↶</span></button>
-            <button class="round-action round-action--subtle" id="clearButton" type="button" aria-label="Clear drawing" title="Clear drawing"><span aria-hidden="true">×</span></button>
+        <section class="control-dock" aria-label="Overlay controls">
+          <div class="overlay-control-card">
+            <div class="overlay-control-card__heading">
+              <span>Overlay opacity</span>
+              <output id="opacityValue" for="opacityRange">62%</output>
+            </div>
+            <input id="opacityRange" type="range" min="0" max="100" value="62" aria-label="Overlay opacity" />
+            <div class="overlay-control-card__actions">
+              <button class="control-button" id="lockButton" type="button" aria-pressed="false">Lock image</button>
+              <button class="control-button control-button--quiet" id="resetButton" type="button">Reset position</button>
+            </div>
           </div>
         </section>
       </section>
@@ -96,25 +78,20 @@
 
     <input id="photoInput" type="file" accept="image/*" hidden />
 
-    <dialog class="camera-sheet" id="cameraSheet" aria-labelledby="cameraTitle">
-      <div class="camera-sheet__bar"></div>
-      <div class="camera-sheet__header">
-        <h2 id="cameraTitle">Frame your reference</h2>
-        <button class="icon-button" id="closeCameraButton" type="button" aria-label="Close camera">×</button>
-      </div>
-      <div class="camera-preview">
-        <video id="cameraVideo" playsinline autoplay muted></video>
-        <p class="camera-message" id="cameraMessage" hidden></p>
-      </div>
-      <div class="camera-sheet__actions">
-        <button class="source-button source-button--primary" id="startLiveCameraButton" type="button">Trace with live camera</button>
-        <div class="camera-sheet__secondary-actions">
-          <button class="source-button" id="cameraPhotoButton" type="button">Choose a photo</button>
-          <button class="capture-button" id="captureButton" type="button" aria-label="Capture a still photo"><span></span></button>
+    <dialog class="source-sheet" id="sourceSheet" aria-labelledby="sourceTitle">
+      <div class="source-sheet__bar"></div>
+      <div class="source-sheet__header">
+        <div>
+          <p class="eyebrow">Your overlay</p>
+          <h2 id="sourceTitle">Add an image</h2>
         </div>
+        <button class="icon-button" id="closeSourceButton" type="button" aria-label="Close image chooser">×</button>
       </div>
+      <button class="source-button source-button--primary" id="sourcePhotosButton" type="button">Choose from Photos</button>
+      <button class="source-button" id="captureOverlayButton" type="button">Capture the camera view</button>
+      <p class="source-sheet__hint">Drag the overlay with one finger. Pinch with two fingers to resize it.</p>
     </dialog>
 
-    <script src="./app.js?v=4"></script>
+    <script src="./app.js?v=6"></script>
   </body>
 </html>

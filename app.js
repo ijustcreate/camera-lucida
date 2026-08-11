@@ -510,7 +510,7 @@
     if (mapped && state.tracking) {
       const confidence = state.lastConfidence === null ? 'looking…' : `${Math.round(state.lastConfidence * 100)}% match`;
       ui.anchorStatus.value = `Tracking paper · ${confidence}`;
-      ui.anchorHint.textContent = 'Drag or pinch is paused while Lucida keeps the mapped plane steady.';
+      ui.anchorHint.textContent = 'Drag or pinch the image directly on the paper plane while Lucida keeps the surface steady.';
       ui.anchorButton.textContent = 'Stop tracking';
       return;
     }
@@ -716,7 +716,7 @@
       addMappingPoint(event);
       return;
     }
-    if (state.locked || state.tracking || !hasOverlay()) return;
+    if (state.locked || (state.tracking && !isPlaneMapped()) || !hasOverlay()) return;
     const rawPoint = stagePoint(event);
     const point = isPlaneMapped() ? screenPointToPlane(rawPoint) : rawPoint;
     if (!point) return;
@@ -969,6 +969,6 @@
   drawTrackingNodes();
   requestAnimationFrame(trackPaper);
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=8', { updateViaCache: 'none' }));
+    window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=9', { updateViaCache: 'none' }));
   }
 })();

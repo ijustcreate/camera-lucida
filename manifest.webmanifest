@@ -1,7 +1,7 @@
 {
   "name": "Plane Lock — Paper mapper",
   "short_name": "Plane Lock",
-  "start_url": "./?v=10",
+  "start_url": "./?v=11",
   "display": "standalone",
   "background_color": "#11110f",
   "theme_color": "#11110f",

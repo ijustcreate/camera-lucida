@@ -47,14 +47,13 @@ h1 { margin: 0; font-family: Iowan Old Style, Baskerville, Georgia, serif; font-
 .drawing-stage { position: absolute; inset: 0; overflow: hidden; background: #060606; }
 .camera-feed { position: absolute; inset: 0; width: 100%; height: 100%; background: #090909; object-fit: cover; }
 .paper-plane { position: absolute; z-index: 2; top: 0; left: 0; width: 1000px; height: 1000px; overflow: hidden; border: 2px solid rgba(139,229,199,.92); background: rgba(139,229,199,.06); box-shadow: 0 0 0 1px rgba(0,0,0,.42) inset, 0 0 28px rgba(109,238,203,.15); pointer-events: none; transform-origin: 0 0; }
-.paper-plane[hidden], .mapping-guide[hidden] { display: none; }
+.paper-plane[hidden] { display: none; }
 .paper-plane__surface { position: absolute; inset: 0; background-image: linear-gradient(rgba(139,229,199,.21) 1px, transparent 1px), linear-gradient(90deg, rgba(139,229,199,.21) 1px, transparent 1px), linear-gradient(rgba(255,247,224,.42) 2px, transparent 2px), linear-gradient(90deg, rgba(255,247,224,.42) 2px, transparent 2px); background-position: 0 0, 0 0, 50% 0, 0 50%; background-size: 100px 100px, 100px 100px, 100% 100%, 100% 100%; }
+.paper-plane.is-candidate { border-color: rgba(215,190,162,.98); border-style: dashed; background: rgba(215,190,162,.1); box-shadow: 0 0 0 1px rgba(0,0,0,.42) inset, 0 0 28px rgba(215,190,162,.26); }
+.paper-plane.is-candidate .paper-plane__surface { opacity: .66; }
+.paper-plane.is-candidate .paper-plane__label, .paper-plane.is-candidate .paper-plane__axis { border-color: rgba(215,190,162,.75); background: rgba(32,27,21,.83); color: #fff0dc; }
 .paper-plane__label, .paper-plane__axis { position: absolute; padding: 5px 8px; border: 1px solid rgba(139,229,199,.55); border-radius: 999px; background: rgba(8,22,18,.8); color: #cffff0; font-size: 24px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .paper-plane__label { top: 26px; left: 26px; font-size: 21px; }.paper-plane__axis--x { right: 26px; bottom: 26px; }.paper-plane__axis--y { top: 26px; right: 26px; }
-.plane-markers { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
-.plane-marker { position: absolute; display: grid; width: 27px; height: 27px; place-items: center; border: 2px solid var(--accent); border-radius: 50%; background: rgba(17,17,15,.78); color: #fff8ef; font-size: .7rem; font-weight: 700; transform: translate(-50%, -50%); box-shadow: 0 2px 10px rgba(0,0,0,.38); }
-.mapping-guide { position: absolute; z-index: 5; top: 50%; right: 24px; left: 24px; max-width: 19rem; margin: 0 auto; padding: 13px 16px; border: 1px solid rgba(215,190,162,.48); border-radius: 15px; background: rgba(18,17,15,.82); color: #f8f0e8; font-size: .82rem; line-height: 1.4; text-align: center; transform: translateY(-50%); backdrop-filter: blur(12px); }
-.studio.is-mapping .paper-plane { visibility: hidden; }
 .tracking-overlay { position: absolute; z-index: 4; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .empty-overlay-note { position: absolute; z-index: 6; top: 50%; right: 24px; left: 24px; max-width: 19rem; margin: 0 auto; padding: 14px 17px; border: 1px solid rgba(255,255,255,.16); border-radius: 15px; background: rgba(13,12,11,.67); color: #f5efe7; cursor: pointer; font-size: .82rem; line-height: 1.45; text-align: center; transform: translateY(-50%); backdrop-filter: blur(12px); }
 .studio.has-camera .empty-overlay-note { display: none; }
@@ -71,7 +70,6 @@ h1 { margin: 0; font-family: Iowan Old Style, Baskerville, Georgia, serif; font-
 .control-button:disabled { cursor: not-allowed; opacity: .42; }
 .control-button--quiet { color: var(--muted); }
 .control-button--anchor { border-color: rgba(139,229,199,.54); background: rgba(139,229,199,.16); color: #ecfff8; }
-.studio.is-mapping .control-button--anchor { border-color: rgba(215,190,162,.76); background: rgba(215,190,162,.28); }
 
 @media (min-width: 720px) { .welcome { max-width: 680px; margin: 0 auto; padding-right: 48px; padding-left: 48px; }.welcome__hint { text-align: left; }.control-dock { bottom: 14px; } }
 @media (orientation: landscape) and (max-height: 550px) { .control-dock { right: max(14px, env(safe-area-inset-right)); left: auto; width: 360px; padding: 0 0 max(12px, env(safe-area-inset-bottom)); }.plane-control-card { margin-left: auto; } }

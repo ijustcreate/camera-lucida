@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Plane Lock" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311110f'/%3E%3Cpath d='M12 17h40v30H12z' fill='none' stroke='%23c9b59d' stroke-width='4'/%3E%3Cpath d='M12 17l10 10m30-10L42 27m-30 20 10-10m30 10L42 37' stroke='%23c9b59d' stroke-width='3'/%3E%3C/svg%3E" />
-    <link rel="manifest" href="./manifest.webmanifest?v=10" />
+    <link rel="manifest" href="./manifest.webmanifest?v=11" />
     <title>Plane Lock — Paper mapper</title>
-    <link rel="stylesheet" href="./styles.css?v=10" />
+    <link rel="stylesheet" href="./styles.css?v=11" />
   </head>
   <body>
     <main class="app-shell" id="appShell">
@@ -22,7 +22,7 @@
         <div class="welcome__copy">
           <p class="eyebrow">Camera-based surface mapping</p>
           <h1 id="welcomeTitle">Map real<br />paper.</h1>
-          <p>Make a piece of paper into a perspective-locked plane in your live camera view. No tracing tools—just the map, the lock, and the data behind it.</p>
+          <p>Point tracking starts immediately. Plane Lock finds a complete sheet in the camera, then asks you to lock the identified paper.</p>
         </div>
         <div class="source-actions">
           <button class="source-button source-button--primary" id="openCameraButton" type="button">
@@ -30,13 +30,13 @@
             Open plane camera
           </button>
         </div>
-        <p class="welcome__hint">For the strongest lock, keep paper edges and nearby desk texture in the camera view.</p>
+        <p class="welcome__hint">Put the entire sheet in view, with its edges and a little surrounding desk texture visible.</p>
       </section>
 
       <section class="studio" id="studio" aria-label="Paper plane mapping camera" hidden>
         <header class="studio-header">
-          <button class="icon-button" id="remapHeaderButton" type="button" aria-label="Map paper plane" title="Map paper plane">
-            <span aria-hidden="true">＋</span>
+          <button class="icon-button" id="remapHeaderButton" type="button" aria-label="Find another paper sheet" title="Find another paper sheet">
+            <span aria-hidden="true">↻</span>
           </button>
           <div class="studio-title" aria-label="Plane lock">
             <span class="mark mark--small" aria-hidden="true"></span>
@@ -62,10 +62,8 @@
               <span class="paper-plane__label">paper plane</span>
             </div>
           </div>
-          <div class="plane-markers" id="planeMarkers" aria-hidden="true"></div>
-          <div class="mapping-guide" id="mappingGuide" aria-live="polite" hidden></div>
           <canvas class="tracking-overlay" id="trackingOverlay" aria-hidden="true"></canvas>
-          <button class="empty-overlay-note" id="cameraNote" type="button">Allow camera access to map a paper plane.</button>
+          <button class="empty-overlay-note" id="cameraNote" type="button">Allow camera access to search for a paper sheet.</button>
         </div>
 
         <section class="control-dock" aria-label="Paper plane controls">
@@ -74,14 +72,14 @@
               <span>Paper plane</span>
               <output id="planeStatus" aria-live="polite">Open camera first</output>
             </div>
-            <p id="planeHint">The mapper looks for real visual features around the sheet, then estimates the paper’s perspective every frame.</p>
+            <p id="planeHint">Point tracking scans the live camera for a complete paper sheet and its surrounding visual detail.</p>
             <div class="plane-control-card__readout">
               <span id="nodeReadout">0 stable nodes</span>
               <span id="lockReadout">Not mapped</span>
             </div>
             <div class="plane-control-card__actions">
-              <button class="control-button control-button--anchor" id="mapButton" type="button">Map paper plane</button>
-              <button class="control-button control-button--quiet" id="resetButton" type="button" disabled>Reset</button>
+              <button class="control-button control-button--anchor" id="mapButton" type="button" disabled>Looking for paper</button>
+              <button class="control-button control-button--quiet" id="resetButton" type="button" disabled>Find again</button>
             </div>
           </div>
         </section>
@@ -89,6 +87,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/jsfeat@0.0.8/build/jsfeat-min.js"></script>
-    <script src="./app.js?v=10"></script>
+    <script src="./app.js?v=11"></script>
   </body>
 </html>

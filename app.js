@@ -8,8 +8,6 @@
     stage: $('#drawingStage'),
     camera: $('#cameraFeed'),
     paperPlane: $('#paperPlane'),
-    planeMarkers: $('#planeMarkers'),
-    mappingGuide: $('#mappingGuide'),
     trackingOverlay: $('#trackingOverlay'),
     cameraNote: $('#cameraNote'),
     openCamera: $('#openCameraButton'),
@@ -28,13 +26,16 @@
     stream: null,
     cameraStartPromise: null,
     paperPlane: null,
-    mapping: null,
+    candidate: null,
     tracking: false,
-    trackerState: 'unmapped',
+    trackerState: 'searching',
     confidence: 0,
     naturalTracker: null,
     showNodes: false,
     lastTrackAt: 0,
+    lastDetectAt: 0,
+    candidateFrames: 0,
+    detector: null,
   };
 
   function showStudio() {
@@ -54,44 +55,46 @@
     const tracker = state.naturalTracker;
     const nodes = tracker?.nodes || [];
     const stable = nodes.filter((node) => node.stable).length;
-    ui.nodeReadout.textContent = `${stable} stable node${stable === 1 ? '' : 's'}`;
-    ui.reset.disabled = !isMapped() && !state.mapping;
-
-    if (state.mapping) {
-      const labels = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
-      const next = labels[state.mapping.points.length] || 'paper';
-      ui.status.value = `${state.mapping.points.length}/4 corners`;
-      ui.hint.textContent = `Tap the ${next} corner of the physical sheet. Start top-left and proceed clockwise.`;
-      ui.lockReadout.textContent = 'Mapping';
-      ui.map.textContent = 'Cancel mapping';
-      ui.map.disabled = false;
-      return;
-    }
+    ui.nodeReadout.textContent = isMapped()
+      ? `${stable} stable node${stable === 1 ? '' : 's'}`
+      : `${nodes.length} live node${nodes.length === 1 ? '' : 's'}`;
 
     if (!hasLiveCamera()) {
       ui.status.value = 'Open camera first';
       ui.hint.textContent = 'The mapper needs the rear camera to see the paper and nearby visual detail.';
       ui.lockReadout.textContent = 'Camera off';
-      ui.map.textContent = 'Map paper plane';
+      ui.map.textContent = 'Looking for paper';
       ui.map.disabled = true;
+      ui.reset.disabled = true;
       return;
     }
 
-    ui.map.disabled = false;
     if (!isMapped()) {
-      ui.status.value = 'Ready to map';
-      ui.hint.textContent = 'Tap the four paper corners once to create a perspective-mapped plane in the live camera.';
-      ui.lockReadout.textContent = 'Not mapped';
-      ui.map.textContent = 'Map paper plane';
+      ui.reset.disabled = false;
+      if (state.candidate) {
+        ui.status.value = `Paper detected - ${Math.round(state.candidate.confidence * 100)}%`;
+        ui.hint.textContent = 'The outlined sheet is complete. Keep all four edges visible, then lock the identified paper.';
+        ui.lockReadout.textContent = 'Ready to lock';
+        ui.map.textContent = 'Lock detected sheet';
+        ui.map.disabled = false;
+      } else {
+        ui.status.value = 'No paper detected';
+        ui.hint.textContent = 'Make the whole paper visible, including all four edges. Keep a little of the desk around it in view.';
+        ui.lockReadout.textContent = 'Searching for sheet';
+        ui.map.textContent = 'Looking for paper';
+        ui.map.disabled = true;
+      }
       return;
     }
 
+    ui.reset.disabled = false;
+    ui.map.disabled = false;
     if (state.trackerState === 'locked') {
-      ui.status.value = `Locked · ${Math.round(state.confidence * 100)}%`;
-      ui.hint.textContent = 'The plane is being updated from natural camera features. Move slowly and keep the paper surface in view.';
+      ui.status.value = `Locked - ${Math.round(state.confidence * 100)}%`;
+      ui.hint.textContent = 'The plane is being updated from natural camera features. Move slowly and keep paper edges and nearby texture in view.';
       ui.lockReadout.textContent = 'Planar lock active';
     } else if (state.trackerState === 'relocalizing') {
-      ui.status.value = 'Re-finding paper…';
+      ui.status.value = 'Re-finding paper...';
       ui.hint.textContent = 'The node set changed. Aim back at the mapped paper and its nearby texture.';
       ui.lockReadout.textContent = 'Relocalizing';
     } else if (state.trackerState === 'scanning') {
@@ -100,14 +103,14 @@
       ui.lockReadout.textContent = 'Learning surface';
     } else if (state.trackerState === 'unsupported') {
       ui.status.value = 'Feature engine unavailable';
-      ui.hint.textContent = 'Reconnect to the internet, then reload so the feature tracker can start.';
+      ui.hint.textContent = 'Reconnect to the internet, then reload so point tracking can start.';
       ui.lockReadout.textContent = 'Static plane';
     } else {
       ui.status.value = 'Lock weakened';
-      ui.hint.textContent = 'Keep more texture and the paper edge visible, or remap the sheet.';
+      ui.hint.textContent = 'Keep more texture and the paper edge visible, or find the sheet again.';
       ui.lockReadout.textContent = 'Needs detail';
     }
-    ui.map.textContent = 'Re-map paper';
+    ui.map.textContent = 'Find new sheet';
   }
 
   async function startCamera() {
@@ -128,10 +131,14 @@
         ui.camera.srcObject = stream;
         await ui.camera.play();
         ui.studio.classList.add('has-camera');
+        state.showNodes = true;
+        ui.nodes.setAttribute('aria-pressed', 'true');
+        ui.nodes.setAttribute('aria-label', 'Hide tracking nodes');
+        startFeatureScan();
         setStatus();
       })
       .catch(() => {
-        ui.cameraNote.textContent = 'Allow camera access, then tap here to open the plane mapper.';
+        ui.cameraNote.textContent = 'Allow camera access, then tap here to search for a paper sheet.';
         setStatus();
       })
       .finally(() => { state.cameraStartPromise = null; });
@@ -143,8 +150,11 @@
     state.stream = null;
     ui.camera.srcObject = null;
     ui.studio.classList.remove('has-camera');
+    state.paperPlane = null;
+    state.candidate = null;
     state.tracking = false;
     state.naturalTracker = null;
+    state.detector = null;
   }
 
   function homographyForQuad(points) {
@@ -198,85 +208,42 @@
   }
 
   function stagePlanePoints() {
-    if (!state.paperPlane) return [];
+    const plane = state.paperPlane || state.candidate;
+    if (!plane) return [];
     const rect = ui.stage.getBoundingClientRect();
     const tracker = state.naturalTracker;
-    if (state.tracking && tracker?.anchorQuad) {
+    if (state.paperPlane && state.tracking && tracker?.anchorQuad) {
       return tracker.anchorQuad.map((point) => {
         const projected = projectPoint(tracker.cumulative, point) || point;
         return { x: projected.x / tracker.width * rect.width, y: projected.y / tracker.height * rect.height };
       });
     }
-    return state.paperPlane.points.map((point) => ({ x: point.x * rect.width, y: point.y * rect.height }));
+    return plane.points.map((point) => ({ x: point.x * rect.width, y: point.y * rect.height }));
   }
 
   function renderPlane() {
-    if (!isMapped()) {
+    if (!state.paperPlane && !state.candidate) {
       ui.paperPlane.hidden = true;
+      ui.paperPlane.classList.remove('is-candidate');
       return;
     }
     const homography = homographyForQuad(stagePlanePoints());
     if (!homography) return;
     const { a, b, c, d, e, f, g, h } = homography;
     ui.paperPlane.hidden = false;
+    ui.paperPlane.classList.toggle('is-candidate', Boolean(state.candidate && !state.paperPlane));
     ui.paperPlane.style.transform = `matrix3d(${a / PLANE_SIZE}, ${d / PLANE_SIZE}, 0, ${g / PLANE_SIZE}, ${b / PLANE_SIZE}, ${e / PLANE_SIZE}, 0, ${h / PLANE_SIZE}, 0, 0, 1, 0, ${c}, ${f}, 0, 1)`;
   }
 
-  function renderMapping() {
-    ui.studio.classList.toggle('is-mapping', Boolean(state.mapping));
-    ui.planeMarkers.replaceChildren();
-    if (!state.mapping) {
-      ui.mappingGuide.hidden = true;
-      return;
-    }
-    const labels = ['Tap top-left', 'Tap top-right', 'Tap bottom-right', 'Tap bottom-left'];
-    ui.mappingGuide.textContent = labels[state.mapping.points.length];
-    ui.mappingGuide.hidden = false;
-    state.mapping.points.forEach((point, index) => {
-      const marker = document.createElement('span');
-      marker.className = 'plane-marker';
-      marker.textContent = String(index + 1);
-      marker.style.left = `${point.x * 100}%`;
-      marker.style.top = `${point.y * 100}%`;
-      ui.planeMarkers.append(marker);
-    });
-  }
-
-  function startMapping() {
-    if (!hasLiveCamera()) return;
-    state.tracking = false;
-    state.naturalTracker = null;
-    state.trackerState = 'unmapped';
-    state.mapping = { points: [] };
-    renderMapping();
-    drawNodes();
-    setStatus();
-  }
-
-  function cancelMapping() {
-    state.mapping = null;
-    renderMapping();
-    renderPlane();
-    setStatus();
-  }
-
-  function mapPointer(event) {
-    if (!state.mapping) return;
-    const rect = ui.stage.getBoundingClientRect();
-    const point = { x: (event.clientX - rect.left) / rect.width, y: (event.clientY - rect.top) / rect.height };
-    state.mapping.points.push(point);
-    renderMapping();
-    if (state.mapping.points.length === 4) finishMapping();
-    else setStatus();
-  }
-
-  function finishMapping() {
-    state.paperPlane = { points: state.mapping.points.map((point) => ({ ...point })) };
-    state.mapping = null;
+  function lockCandidate() {
+    if (!state.candidate) return;
+    state.paperPlane = { points: state.candidate.points.map((point) => ({ ...point })) };
+    state.candidate = null;
+    state.candidateFrames = 0;
     state.tracking = true;
     state.confidence = 0;
     state.trackerState = 'scanning';
-    renderMapping();
+    state.naturalTracker = null;
     renderPlane();
     const started = startNaturalTracker();
     if (!started) state.trackerState = window.jsfeat ? 'scanning' : 'unsupported';
@@ -284,21 +251,21 @@
   }
 
   function resetPlane() {
-    state.mapping = null;
     state.paperPlane = null;
+    state.candidate = null;
+    state.candidateFrames = 0;
     state.tracking = false;
-    state.trackerState = 'unmapped';
+    state.trackerState = 'searching';
     state.confidence = 0;
     state.naturalTracker = null;
-    renderMapping();
     renderPlane();
-    drawNodes();
+    startFeatureScan();
     setStatus();
   }
 
   function createNaturalTracker() {
     const J = window.jsfeat;
-    if (!J || !hasLiveCamera() || !isMapped()) return null;
+    if (!J || !hasLiveCamera()) return null;
     const stage = ui.stage.getBoundingClientRect();
     let width = 260;
     let height = Math.round(width * stage.height / stage.width);
@@ -457,6 +424,16 @@
     drawNodes();
   }
 
+  function startFeatureScan() {
+    if (!hasLiveCamera()) return false;
+    const tracker = createNaturalTracker();
+    if (!tracker || !captureFrame(tracker)) return false;
+    detectPoints(tracker);
+    state.naturalTracker = tracker;
+    state.trackerState = 'searching';
+    return true;
+  }
+
   function startNaturalTracker() {
     const tracker = createNaturalTracker();
     if (!tracker || !captureFrame(tracker)) return false;
@@ -570,6 +547,150 @@
     setStatus();
   }
 
+  function updateFeatureScan() {
+    let tracker = state.naturalTracker;
+    if (!tracker && !startFeatureScan()) return;
+    tracker = state.naturalTracker;
+    if (!tracker || !captureFrame(tracker)) return;
+    detectPoints(tracker);
+  }
+
+  function createDetector() {
+    const rect = ui.stage.getBoundingClientRect();
+    const width = 180;
+    const height = Math.max(180, Math.min(420, Math.round(width * rect.height / rect.width)));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    return { canvas, context: canvas.getContext('2d', { willReadFrequently: true }), width, height };
+  }
+
+  function captureDetectorFrame(detector) {
+    const videoWidth = ui.camera.videoWidth;
+    const videoHeight = ui.camera.videoHeight;
+    if (!videoWidth || !videoHeight) return null;
+    const sourceAspect = videoWidth / videoHeight;
+    const targetAspect = detector.width / detector.height;
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = videoWidth;
+    let sourceHeight = videoHeight;
+    if (sourceAspect > targetAspect) {
+      sourceWidth = videoHeight * targetAspect;
+      sourceX = (videoWidth - sourceWidth) / 2;
+    } else {
+      sourceHeight = videoWidth / targetAspect;
+      sourceY = (videoHeight - sourceHeight) / 2;
+    }
+    detector.context.drawImage(ui.camera, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, detector.width, detector.height);
+    return detector.context.getImageData(0, 0, detector.width, detector.height).data;
+  }
+
+  function polygonArea(points) {
+    return Math.abs(points.reduce((sum, point, index) => {
+      const next = points[(index + 1) % points.length];
+      return sum + point.x * next.y - next.x * point.y;
+    }, 0) / 2);
+  }
+
+  function candidateFromComponent(component, width, height, mean, deviation) {
+    const boxWidth = component.maxX - component.minX + 1;
+    const boxHeight = component.maxY - component.minY + 1;
+    const areaRatio = component.count / (width * height);
+    const fill = component.count / (boxWidth * boxHeight);
+    const aspect = boxWidth / boxHeight;
+    const contrast = component.luminance / component.count - mean;
+    if (areaRatio < .075 || areaRatio > .82 || boxWidth < width * .28 || boxHeight < height * .24 || aspect < .38 || aspect > 2.65 || fill < .44 || contrast < Math.max(7, deviation * .1)) return null;
+    const points = [component.topLeft, component.topRight, component.bottomRight, component.bottomLeft].map((point) => ({ x: point.x / width, y: point.y / height }));
+    const quadArea = polygonArea(points);
+    if (quadArea < .065 || quadArea > .86) return null;
+    const sides = points.map((point, index) => Math.hypot(point.x - points[(index + 1) % 4].x, point.y - points[(index + 1) % 4].y));
+    if (Math.min(...sides) < .18) return null;
+    const confidence = Math.max(.5, Math.min(.97, .3 + fill * .34 + Math.min(1, contrast / (deviation * 1.35 + 1)) * .24 + Math.min(.12, areaRatio * .16)));
+    return { points, confidence, areaRatio, fill };
+  }
+
+  function findPaperCandidate() {
+    if (!hasLiveCamera()) return;
+    const rect = ui.stage.getBoundingClientRect();
+    if (!state.detector || Math.abs(state.detector.width / state.detector.height - rect.width / rect.height) > .04) state.detector = createDetector();
+    const detector = state.detector;
+    const pixels = captureDetectorFrame(detector);
+    if (!pixels) return;
+    const total = detector.width * detector.height;
+    const luminance = new Uint8Array(total);
+    let sum = 0;
+    let squareSum = 0;
+    for (let index = 0; index < total; index += 1) {
+      const pixel = index * 4;
+      const value = Math.round(pixels[pixel] * .2126 + pixels[pixel + 1] * .7152 + pixels[pixel + 2] * .0722);
+      luminance[index] = value;
+      sum += value;
+      squareSum += value * value;
+    }
+    const mean = sum / total;
+    const deviation = Math.sqrt(Math.max(0, squareSum / total - mean * mean));
+    const threshold = Math.min(245, mean + Math.max(9, deviation * .18));
+    const accepted = new Uint8Array(total);
+    for (let index = 0; index < total; index += 1) accepted[index] = luminance[index] >= threshold ? 1 : 0;
+    const visited = new Uint8Array(total);
+    const queue = new Int32Array(total);
+    let best = null;
+    for (let seed = 0; seed < total; seed += 1) {
+      if (!accepted[seed] || visited[seed]) continue;
+      let head = 0;
+      let tail = 0;
+      queue[tail++] = seed;
+      visited[seed] = 1;
+      const component = {
+        count: 0, luminance: 0, minX: detector.width, maxX: 0, minY: detector.height, maxY: 0,
+        topLeft: null, topRight: null, bottomRight: null, bottomLeft: null,
+        minSum: Infinity, maxDifference: -Infinity, maxSum: -Infinity, minDifference: Infinity,
+      };
+      while (head < tail) {
+        const index = queue[head++];
+        const x = index % detector.width;
+        const y = Math.floor(index / detector.width);
+        const sumXY = x + y;
+        const difference = x - y;
+        component.count += 1;
+        component.luminance += luminance[index];
+        component.minX = Math.min(component.minX, x);
+        component.maxX = Math.max(component.maxX, x);
+        component.minY = Math.min(component.minY, y);
+        component.maxY = Math.max(component.maxY, y);
+        if (sumXY < component.minSum) { component.minSum = sumXY; component.topLeft = { x, y }; }
+        if (difference > component.maxDifference) { component.maxDifference = difference; component.topRight = { x, y }; }
+        if (sumXY > component.maxSum) { component.maxSum = sumXY; component.bottomRight = { x, y }; }
+        if (difference < component.minDifference) { component.minDifference = difference; component.bottomLeft = { x, y }; }
+        const neighbours = [index - 1, index + 1, index - detector.width, index + detector.width];
+        for (const neighbour of neighbours) {
+          if (neighbour < 0 || neighbour >= total) continue;
+          const neighbourX = neighbour % detector.width;
+          if (Math.abs(neighbourX - x) > 1 || !accepted[neighbour] || visited[neighbour]) continue;
+          visited[neighbour] = 1;
+          queue[tail++] = neighbour;
+        }
+      }
+      const candidate = candidateFromComponent(component, detector.width, detector.height, mean, deviation);
+      if (candidate && (!best || candidate.confidence > best.confidence)) best = candidate;
+    }
+    if (!best) {
+      state.candidate = null;
+      state.candidateFrames = 0;
+      renderPlane();
+      setStatus();
+      return;
+    }
+    const previous = state.candidate;
+    const shift = previous ? best.points.reduce((sumDistance, point, index) => sumDistance + Math.hypot(point.x - previous.points[index].x, point.y - previous.points[index].y), 0) / 4 : Infinity;
+    state.candidateFrames = shift < .075 ? state.candidateFrames + 1 : 1;
+    best.confidence = Math.min(.99, best.confidence + Math.min(.08, state.candidateFrames * .02));
+    state.candidate = best;
+    renderPlane();
+    setStatus();
+  }
+
   function drawNodes() {
     const canvas = ui.trackingOverlay;
     const context = canvas.getContext('2d');
@@ -593,7 +714,7 @@
       context.stroke();
     });
     context.fillStyle = 'rgba(13,17,15,.78)';
-    context.fillRect(12, rect.height - 38, 126, 26);
+    context.fillRect(12, rect.height - 38, 132, 26);
     context.fillStyle = '#d9f8ec';
     context.font = '600 12px system-ui';
     context.fillText(`${nodes.filter((node) => node.stable).length}/${nodes.length} stable nodes`, 20, rect.height - 21);
@@ -608,9 +729,21 @@
 
   function trackLoop(timestamp) {
     requestAnimationFrame(trackLoop);
-    if (!state.tracking || timestamp - state.lastTrackAt < 85) return;
-    state.lastTrackAt = timestamp;
-    updateNaturalTracker();
+    if (!hasLiveCamera()) return;
+    if (state.tracking && timestamp - state.lastTrackAt >= 85) {
+      state.lastTrackAt = timestamp;
+      updateNaturalTracker();
+      return;
+    }
+    if (!state.tracking && timestamp - state.lastTrackAt >= 160) {
+      state.lastTrackAt = timestamp;
+      updateFeatureScan();
+      setStatus();
+    }
+    if (!state.tracking && timestamp - state.lastDetectAt >= 240) {
+      state.lastDetectAt = timestamp;
+      findPaperCandidate();
+    }
   }
 
   async function toggleFullscreen() {
@@ -624,19 +757,18 @@
 
   ui.openCamera.addEventListener('click', startCamera);
   ui.cameraNote.addEventListener('click', startCamera);
-  ui.remapHeader.addEventListener('click', startMapping);
-  ui.map.addEventListener('click', () => state.mapping ? cancelMapping() : startMapping());
+  ui.remapHeader.addEventListener('click', resetPlane);
+  ui.map.addEventListener('click', () => (isMapped() ? resetPlane() : lockCandidate()));
   ui.reset.addEventListener('click', resetPlane);
   ui.nodes.addEventListener('click', toggleNodes);
   ui.fullScreen.addEventListener('click', toggleFullscreen);
-  ui.stage.addEventListener('pointerdown', mapPointer);
-  window.addEventListener('resize', () => { renderPlane(); drawNodes(); });
+  window.addEventListener('resize', () => { state.detector = null; renderPlane(); drawNodes(); });
   window.addEventListener('pagehide', stopCamera);
 
   setStatus();
   drawNodes();
   requestAnimationFrame(trackLoop);
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=10', { updateViaCache: 'none' }));
+    window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=11', { updateViaCache: 'none' }));
   }
 })();

@@ -1,5 +1,5 @@
-const CACHE_NAME = 'plane-lock-v10';
-const ASSETS = ['./', './index.html?v=10', './styles.css?v=10', './app.js?v=10', './manifest.webmanifest?v=10'];
+const CACHE_NAME = 'plane-lock-v11';
+const ASSETS = ['./', './index.html?v=11', './styles.css?v=11', './app.js?v=11', './manifest.webmanifest?v=11'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));

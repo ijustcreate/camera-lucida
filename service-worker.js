@@ -1,5 +1,5 @@
-const CACHE_NAME = 'lucida-v3';
-const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest'];
+const CACHE_NAME = 'lucida-v4';
+const ASSETS = ['./', './index.html?v=4', './styles.css?v=4', './app.js?v=4', './manifest.webmanifest?v=4'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
@@ -14,5 +14,14 @@ self.addEventListener('activate', (event) => {
 });
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok && new URL(event.request.url).origin === self.location.origin) {
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request)),
+  );
 });

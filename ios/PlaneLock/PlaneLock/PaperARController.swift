@@ -292,14 +292,14 @@ final class PaperARController: NSObject, ARSessionDelegate {
         stableFrames = movement < 0.018 && worldMovement < 0.025 ? min(5, stableFrames + 1) : 1
         lastCandidate = best
 
-        updateState { state in
-            state.phase = stableFrames >= 5 ? .ready : .confirming
-            state.instruction = stableFrames >= 5
+        updateState { [self] state in
+            state.phase = self.stableFrames >= 5 ? .ready : .confirming
+            state.instruction = self.stableFrames >= 5
                 ? "LiDAR and ARKit agree on the sheet plane. Lock this detected paper."
                 : "Hold still while ARKit confirms the same four corners in 3D."
             state.rectanglePoints = best.normalizedCorners
             state.confidence = best.confidence
-            state.stableFrames = stableFrames
+            state.stableFrames = self.stableFrames
         }
     }
 
@@ -373,9 +373,9 @@ final class PaperARController: NSObject, ARSessionDelegate {
                 else { meshIDs.remove(anchor.identifier) }
             }
         }
-        updateState { state in
-            state.planeCount = planeIDs.count
-            state.meshCount = meshIDs.count
+        updateState { [self] state in
+            state.planeCount = self.planeIDs.count
+            state.meshCount = self.meshIDs.count
         }
     }
 
@@ -418,4 +418,3 @@ final class PaperARController: NSObject, ARSessionDelegate {
         }
     }
 }
-

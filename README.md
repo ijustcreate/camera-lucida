@@ -2,6 +2,8 @@
 
 Plane Lock is a camera-first paper detector and planar tracker for iPhone Safari. It contains no drawing or tracing tools.
 
+The repository now also contains a native [ARKit + LiDAR iPhone app](ios/PlaneLock/README.md). The native build is the primary route for genuine world-space locking; this web version remains a no-install fallback.
+
 ## What the vision pipeline does
 
 1. Crops the rear-camera image to exactly match the visible screen.

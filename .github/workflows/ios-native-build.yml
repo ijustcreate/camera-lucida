@@ -1,0 +1,72 @@
+name: Native iOS Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "ios/PlaneLock/**"
+      - ".github/workflows/ios-native-build.yml"
+  pull_request:
+    paths:
+      - "ios/PlaneLock/**"
+      - ".github/workflows/ios-native-build.yml"
+
+jobs:
+  build:
+    name: Compile ARKit app
+    runs-on: macos-15
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: ios/PlaneLock
+        run: xcodegen generate
+
+      - name: Compile for iOS Simulator
+        working-directory: ios/PlaneLock
+        run: >-
+          xcodebuild
+          -project PlaneLock.xcodeproj
+          -scheme PlaneLock
+          -configuration Debug
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          COMPILER_INDEX_STORE_ENABLE=NO
+          build
+
+      - name: Build unsigned device application
+        working-directory: ios/PlaneLock
+        run: >-
+          xcodebuild
+          -project PlaneLock.xcodeproj
+          -scheme PlaneLock
+          -configuration Release
+          -sdk iphoneos
+          -destination 'generic/platform=iOS'
+          -derivedDataPath "$RUNNER_TEMP/PlaneLockDerivedData"
+          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
+          COMPILER_INDEX_STORE_ENABLE=NO
+          build
+
+      - name: Package unsigned device build
+        run: |
+          mkdir -p "$RUNNER_TEMP/PlaneLockArtifact/Payload"
+          cp -R "$RUNNER_TEMP/PlaneLockDerivedData/Build/Products/Release-iphoneos/PlaneLock.app" "$RUNNER_TEMP/PlaneLockArtifact/Payload/"
+          cd "$RUNNER_TEMP/PlaneLockArtifact"
+          zip -r "$RUNNER_TEMP/PlaneLock-unsigned.ipa" Payload
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlaneLock-unsigned-iphone
+          path: ${{ runner.temp }}/PlaneLock-unsigned.ipa
+          retention-days: 14
+

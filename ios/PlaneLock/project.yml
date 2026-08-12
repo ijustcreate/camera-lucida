@@ -1,0 +1,38 @@
+name: PlaneLock
+options:
+  bundleIdPrefix: com.ijustcreate
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    SUPPORTS_MACCATALYST: NO
+    CODE_SIGN_STYLE: Automatic
+targets:
+  PlaneLock:
+    type: application
+    platform: iOS
+    sources:
+      - path: PlaneLock
+    info:
+      path: PlaneLock/Info.plist
+      properties:
+        CFBundleDisplayName: Plane Lock
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        NSCameraUsageDescription: Plane Lock uses the rear camera, ARKit, and LiDAR to detect paper and lock a plane to it.
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIApplicationSupportsIndirectInputEvents: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ijustcreate.PlaneLock
+        PRODUCT_NAME: PlaneLock
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_PREVIEWS: YES
+    scheme:
+      testTargets: []
+
